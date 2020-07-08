@@ -12,16 +12,21 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Toast;
 
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import cz.msebera.android.httpclient.Header;
 
 
 public class MainActivity extends AppCompatActivity {
 
     // Constants:
     // TODO: Create the base URL
-    private final String BASE_URL = "https://apiv2.bitcoin ...";
+    private final String BASE_URL = "https://apiv2.bitcoinaverage.com/indices/global/ticker/BTC";
 
     // Member Variables:
     TextView mPriceTextView;
@@ -45,32 +50,50 @@ public class MainActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
         // TODO: Set an OnItemSelected listener on the spinner
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                Log.d("Bitcoin","setonItemSelected: "+adapterView.getItemAtPosition(i));
+                String symbol= adapterView.getItemAtPosition(i).toString();
+                letsDoSomeNetworking(BASE_URL+symbol);
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+                Log.d("Bitcoin","onNothingSelected!");
+            }
+        });
 
     }
 
     // TODO: complete the letsDoSomeNetworking() method
     private void letsDoSomeNetworking(String url) {
 
-//        AsyncHttpClient client = new AsyncHttpClient();
-//        client.get(WEATHER_URL, params, new JsonHttpResponseHandler() {
-//
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-//                // called when response HTTP status is "200 OK"
-//                Log.d("Clima", "JSON: " + response.toString());
-//                WeatherDataModel weatherData = WeatherDataModel.fromJson(response);
-//                updateUI(weatherData);
-//            }
-//
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, Throwable e, JSONObject response) {
-//                // called when response HTTP status is "4XX" (eg. 401, 403, 404)
-//                Log.d("Clima", "Request fail! Status code: " + statusCode);
-//                Log.d("Clima", "Fail response: " + response);
-//                Log.e("ERROR", e.toString());
-//                Toast.makeText(WeatherController.this, "Request Failed", Toast.LENGTH_SHORT).show();
-//            }
-//        });
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get(url, new JsonHttpResponseHandler() {
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                // called when response HTTP status is "200 OK"
+                Log.d("Bitcoin", "JSON: " + response.toString());
+                try{
+                    mPriceTextView.setText(response.get("last").toString());
+                }catch (JSONException e){
+                    e.printStackTrace();
+                    return;
+                }
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, Throwable e, JSONObject response) {
+                // called when response HTTP status is "4XX" (eg. 401, 403, 404)
+                Log.d("Bitcoin", "Request fail! Status code: " + statusCode);
+                Log.d("Bitcoin", "Fail response: " + response);
+                Log.e("ERROR", e.toString());
+                Toast.makeText(MainActivity.this, "Request Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
 
 
     }
